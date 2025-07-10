@@ -117,6 +117,34 @@
             }
         }
         
+        /* FAB (Floating Action Button) styling */
+        #addTaskBtn {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+        }
+        
+        #addTaskBtn:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+        
+        #addTaskBtn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Responsive FAB positioning */
+        @media (max-width: 448px) {
+            #addTaskBtn {
+                right: 0.75rem;
+                width: 3.25rem;
+                height: 3.25rem;
+            }
+            
+            #addTaskBtn svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+        
     </style>
 </head>
 <body class="bg-gray-900 text-white overflow-x-hidden">
@@ -141,17 +169,9 @@
             <header class="sticky top-0 bg-gray-900 border-b border-gray-700 z-10">
                 <div class="flex items-center justify-between px-4 py-3">
                     <h1 class="text-xl font-medium text-white">MyToDo</h1>
-                    <div class="flex items-center gap-2">
-                        <button id="sortBtn" class="p-2 hover:bg-gray-800 rounded-full transition-colors text-lg" title="Sort by: created">
-                            📅
-                        </button>
-                        <button id="addTaskBtn" class="p-2 hover:bg-gray-800 rounded-full transition-colors">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-300">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                        </button>
-                    </div>
+                    <button id="sortBtn" class="p-2 hover:bg-gray-800 rounded-full transition-colors text-lg" title="Sort by: created">
+                        📅
+                    </button>
                 </div>
             </header>
 
@@ -166,6 +186,14 @@
                     ← Swipe to Archive
                 </span>
             </div>
+
+            <!-- FAB (Floating Action Button) -->
+            <button id="addTaskBtn" class="fixed w-14 h-14 bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 z-30" style="right: 1rem; top: 66%;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
 
             <!-- Bottom Navigation -->
             <nav class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-gray-800 border-t border-gray-700">
