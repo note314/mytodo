@@ -297,12 +297,27 @@ class MyToDoApp {
             this.toggleTaskDeletion(task.id);
         });
 
+        // Add touch events to ensure checkbox responsiveness on mobile
+        completionBtn.addEventListener('touchend', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log('Completion checkbox touched:', task.id);
+            this.toggleTaskCompletion(task.id);
+        });
+
+        deletionBtn.addEventListener('touchend', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log('Deletion checkbox touched:', task.id);
+            this.toggleTaskDeletion(task.id);
+        });
+
         titleElement.addEventListener('click', () => {
             this.showTaskDetail(task);
         });
 
-        // Swipe functionality
-        this.bindSwipeEvents(element, task);
+        // Swipe functionality - bind only to title area to avoid checkbox interference
+        this.bindSwipeEvents(titleElement, task, element);
         
         // Drag and drop functionality
         this.bindDragEvents(element, task);
@@ -338,10 +353,11 @@ class MyToDoApp {
         });
     }
 
-    bindSwipeEvents(element, task) {
+    bindSwipeEvents(swipeTarget, task, parentElement) {
         let startX, startY, startTime;
+        const element = parentElement || swipeTarget;
         
-        element.addEventListener('touchstart', (e) => {
+        swipeTarget.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
             startX = touch.clientX;
             startY = touch.clientY;
@@ -349,7 +365,7 @@ class MyToDoApp {
             this.swipeElement = element;
         });
 
-        element.addEventListener('touchmove', (e) => {
+        swipeTarget.addEventListener('touchmove', (e) => {
             if (!this.swipeElement) return;
             
             const touch = e.touches[0];
@@ -370,7 +386,7 @@ class MyToDoApp {
             }
         });
 
-        element.addEventListener('touchend', (e) => {
+        swipeTarget.addEventListener('touchend', (e) => {
             if (!this.swipeElement) return;
             
             const touch = e.changedTouches[0];

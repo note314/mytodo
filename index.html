@@ -62,6 +62,26 @@
         .drop-zone:hover::before {
             opacity: 1;
         }
+        
+        /* Improve touch responsiveness for checkboxes */
+        .completion-checkbox, .deletion-checkbox {
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* Prevent text selection on task items */
+        .task-item {
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: pan-x;
+        }
+        
+        /* Allow swipe only on title area */
+        .task-title {
+            touch-action: pan-x;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white overflow-x-hidden">
