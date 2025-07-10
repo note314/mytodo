@@ -7,6 +7,7 @@ class MyToDoApp {
         this.swipeStartX = 0;
         this.swipeStartY = 0;
         this.swipeElement = null;
+        this.sortBy = 'created'; // 'created', 'title', 'completed'
         
         this.init();
     }
@@ -127,7 +128,7 @@ class MyToDoApp {
         const container = document.getElementById('taskList');
         const activeTasks = this.tasks
             .filter(task => !task.isArchived)
-            .sort((a, b) => (a.order || 0) - (b.order || 0));
+            .sort((a, b) => this.getSortComparator(a, b));
 
         container.innerHTML = '';
 
@@ -135,6 +136,39 @@ class MyToDoApp {
             const taskElement = this.createTaskElement(task);
             container.appendChild(taskElement);
         });
+    }
+
+    getSortComparator(a, b) {
+        switch (this.sortBy) {
+            case 'title':
+                return a.title.localeCompare(b.title);
+            case 'completed':
+                if (a.isCompleted === b.isCompleted) {
+                    return (a.order || 0) - (b.order || 0);
+                }
+                return a.isCompleted ? 1 : -1;
+            case 'created':
+            default:
+                return (a.order || 0) - (b.order || 0);
+        }
+    }
+
+    toggleSort() {
+        const sortOptions = ['created', 'title', 'completed'];
+        const currentIndex = sortOptions.indexOf(this.sortBy);
+        this.sortBy = sortOptions[(currentIndex + 1) % sortOptions.length];
+        
+        // Update sort button text
+        const sortBtn = document.getElementById('sortBtn');
+        const sortLabels = {
+            'created': '📅',
+            'title': '🔤', 
+            'completed': '✅'
+        };
+        sortBtn.innerHTML = sortLabels[this.sortBy];
+        sortBtn.title = `Sort by: ${this.sortBy}`;
+        
+        this.renderTasks();
     }
 
     createTaskElement(task) {
@@ -155,7 +189,7 @@ class MyToDoApp {
 
             <!-- Task Title -->
             <div class="flex-1 min-w-0 mr-3 task-title">
-                <span class="block truncate text-sm ${
+                <span class="block truncate text-base ${
                     task.isCompleted 
                         ? 'text-gray-400 line-through' 
                         : 'text-gray-200'
@@ -210,7 +244,7 @@ class MyToDoApp {
                     : `<div class="w-5 h-5 border-2 border-gray-600 rounded mr-3 mt-0.5"></div>`
                 }
                 <div class="flex-1">
-                    <span class="block text-sm ${
+                    <span class="block text-base ${
                         task.isCompleted 
                             ? 'text-gray-400' 
                             : 'text-gray-200'
@@ -246,6 +280,7 @@ class MyToDoApp {
     bindEvents() {
         // Modal events
         document.getElementById('addTaskBtn').addEventListener('click', () => this.showTaskModal());
+        document.getElementById('sortBtn').addEventListener('click', () => this.toggleSort());
         document.getElementById('saveTask').addEventListener('click', () => this.saveNewTask());
         document.getElementById('cancelTask').addEventListener('click', () => this.hideTaskModal());
         document.getElementById('saveDetail').addEventListener('click', () => this.saveTaskDetail());

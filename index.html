@@ -111,12 +111,17 @@
             <header class="sticky top-0 bg-gray-900 border-b border-gray-700 z-10">
                 <div class="flex items-center justify-between px-4 py-3">
                     <h1 class="text-xl font-medium text-white">MyToDo</h1>
-                    <button id="addTaskBtn" class="p-2 hover:bg-gray-800 rounded-full transition-colors">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-300">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button id="sortBtn" class="p-2 hover:bg-gray-800 rounded-full transition-colors text-lg" title="Sort by: created">
+                            📅
+                        </button>
+                        <button id="addTaskBtn" class="p-2 hover:bg-gray-800 rounded-full transition-colors">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-300">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </header>
 
