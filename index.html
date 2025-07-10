@@ -82,6 +82,11 @@
         .task-title {
             touch-action: pan-x;
         }
+        
+        /* Ensure no line-through in archive items */
+        [data-archive-item="true"] {
+            text-decoration: none !important;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white overflow-x-hidden">

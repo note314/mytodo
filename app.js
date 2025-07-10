@@ -214,7 +214,7 @@ class MyToDoApp {
                         task.isCompleted 
                             ? 'text-gray-400' 
                             : 'text-gray-200'
-                    }">
+                    }" data-archive-item="true">
                         ${this.escapeHtml(task.title)}
                     </span>
                 </div>
