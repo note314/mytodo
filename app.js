@@ -673,8 +673,11 @@ class MyToDoApp {
                 if (deltaX > 20) {
                     clearTimeout(dragTimer);
                 }
+            } else {
+                // Prevent scrolling during drag
+                e.preventDefault();
             }
-        });
+        }, { passive: false });
     }
 
     startDragMode(element, task) {
@@ -687,9 +690,11 @@ class MyToDoApp {
         }
         
         element.classList.add('drag-active');
+        document.body.classList.add('dragging');
         
         this.draggedElement = element;
         this.draggedTask = task;
+        this.currentDropTarget = null;
         
         // Add drop zones to other tasks
         const allTasks = document.querySelectorAll('.task-item');
@@ -699,6 +704,9 @@ class MyToDoApp {
                 this.bindDropEvents(taskEl);
             }
         });
+        
+        // Add touch move handler for drag feedback
+        this.addDragMoveHandler();
     }
 
     bindDropEvents(element) {
@@ -764,18 +772,95 @@ class MyToDoApp {
         draggedTask.order = targetOrder;
     }
 
+    addDragMoveHandler() {
+        // Remove any existing handlers
+        this.removeDragMoveHandler();
+        
+        // Touch move handler for mobile drag feedback
+        this.touchMoveHandler = (e) => {
+            if (!this.draggedElement) return;
+            
+            const touch = e.touches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropTarget = elementBelow ? elementBelow.closest('.task-item.drop-zone') : null;
+            
+            // Clear previous drop target highlighting
+            if (this.currentDropTarget && this.currentDropTarget !== dropTarget) {
+                this.currentDropTarget.style.borderTop = '';
+                this.currentDropTarget.style.backgroundColor = '';
+            }
+            
+            // Highlight current drop target
+            if (dropTarget && dropTarget !== this.currentDropTarget) {
+                dropTarget.style.borderTop = '3px solid #059669';
+                dropTarget.style.backgroundColor = '#374151';
+                console.log('Drag over task:', dropTarget.dataset.taskId);
+            }
+            
+            this.currentDropTarget = dropTarget;
+        };
+        
+        // Mouse move handler for desktop
+        this.mouseMoveHandler = (e) => {
+            if (!this.draggedElement) return;
+            
+            const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+            const dropTarget = elementBelow ? elementBelow.closest('.task-item.drop-zone') : null;
+            
+            // Clear previous drop target highlighting
+            if (this.currentDropTarget && this.currentDropTarget !== dropTarget) {
+                this.currentDropTarget.style.borderTop = '';
+                this.currentDropTarget.style.backgroundColor = '';
+            }
+            
+            // Highlight current drop target
+            if (dropTarget && dropTarget !== this.currentDropTarget) {
+                dropTarget.style.borderTop = '3px solid #059669';
+                dropTarget.style.backgroundColor = '#374151';
+            }
+            
+            this.currentDropTarget = dropTarget;
+        };
+        
+        document.addEventListener('touchmove', this.touchMoveHandler, { passive: false });
+        document.addEventListener('mousemove', this.mouseMoveHandler);
+    }
+    
+    removeDragMoveHandler() {
+        if (this.touchMoveHandler) {
+            document.removeEventListener('touchmove', this.touchMoveHandler);
+            this.touchMoveHandler = null;
+        }
+        if (this.mouseMoveHandler) {
+            document.removeEventListener('mousemove', this.mouseMoveHandler);
+            this.mouseMoveHandler = null;
+        }
+    }
+
     endDragMode() {
         if (this.draggedElement) {
             this.draggedElement.classList.remove('drag-active');
+            document.body.classList.remove('dragging');
+            
+            // Drop on current target if exists
+            if (this.currentDropTarget) {
+                this.dropTask(this.currentDropTarget);
+            }
+            
             this.draggedElement = null;
             this.draggedTask = null;
+            this.currentDropTarget = null;
         }
+        
+        // Remove drag move handlers
+        this.removeDragMoveHandler();
         
         // Remove drop zones
         const dropZones = document.querySelectorAll('.drop-zone');
         dropZones.forEach(zone => {
             zone.classList.remove('drop-zone');
             zone.style.borderTop = '';
+            zone.style.backgroundColor = '';
         });
     }
 

@@ -96,6 +96,18 @@
             background-color: #374151 !important;
             border: 2px solid #059669 !important;
         }
+        
+        /* Prevent scrolling during drag */
+        body.dragging {
+            overflow: hidden;
+            touch-action: none;
+        }
+        
+        /* Drop zone highlighting */
+        .drop-zone-highlight {
+            border-top: 3px solid #059669 !important;
+            background-color: #374151 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white overflow-x-hidden">
