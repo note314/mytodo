@@ -70,16 +70,22 @@
         }
         
         /* Modal positioning optimization for mobile keyboards */
-        .modal-top {
+        div.modal-top {
             align-items: flex-start !important;
-            padding-top: max(4rem, env(safe-area-inset-top) + 2rem);
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-top: max(4rem, env(safe-area-inset-top) + 2rem) !important;
+            padding-bottom: env(safe-area-inset-bottom) !important;
         }
         
-        .modal-center {
+        div.modal-center {
             align-items: center !important;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-top: env(safe-area-inset-top) !important;
+            padding-bottom: env(safe-area-inset-bottom) !important;
+        }
+        
+        /* Force top positioning for specific modals */
+        #taskModal, #detailModal {
+            align-items: flex-start !important;
+            padding-top: max(4rem, env(safe-area-inset-top) + 2rem) !important;
         }
         
         /* Prevent modal content from being too close to screen edges */
@@ -90,11 +96,24 @@
         
         /* Additional mobile keyboard optimization */
         @media (max-height: 600px) {
-            .modal-top {
-                padding-top: 2rem;
+            div.modal-top, #taskModal, #detailModal {
+                padding-top: 2rem !important;
             }
             .modal-content {
                 max-height: calc(100vh - 4rem);
+            }
+        }
+        
+        /* PWA specific overrides */
+        @media (display-mode: standalone) {
+            #taskModal, #detailModal {
+                align-items: flex-start !important;
+                padding-top: 4rem !important;
+            }
+            
+            div.modal-top {
+                align-items: flex-start !important;
+                padding-top: 4rem !important;
             }
         }
         
