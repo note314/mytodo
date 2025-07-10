@@ -393,6 +393,9 @@ class MyToDoApp {
         const element = parentElement || swipeTarget;
         
         swipeTarget.addEventListener('touchstart', (e) => {
+            // Don't start swipe if drag mode is active
+            if (this.draggedElement) return;
+            
             const touch = e.touches[0];
             startX = touch.clientX;
             startY = touch.clientY;
@@ -401,7 +404,7 @@ class MyToDoApp {
         });
 
         swipeTarget.addEventListener('touchmove', (e) => {
-            if (!this.swipeElement) return;
+            if (!this.swipeElement || this.draggedElement) return;
             
             const touch = e.touches[0];
             const deltaX = touch.clientX - startX;
@@ -422,7 +425,7 @@ class MyToDoApp {
         });
 
         swipeTarget.addEventListener('touchend', (e) => {
-            if (!this.swipeElement) return;
+            if (!this.swipeElement || this.draggedElement) return;
             
             const touch = e.changedTouches[0];
             const deltaX = touch.clientX - startX;
@@ -597,26 +600,39 @@ class MyToDoApp {
 
     // Drag and Drop Implementation
     bindDragEvents(element, task) {
-        let dragStartY = 0;
+        let dragStartX = 0, dragStartY = 0;
         let dragTimer = null;
         let isDragging = false;
+        let dragMode = false;
 
-        // Long press to start drag mode
+        // Long press to start drag mode - only for non-swipe areas
         element.addEventListener('mousedown', (e) => {
+            // Skip if clicking on checkboxes
+            if (e.target.closest('.completion-checkbox, .deletion-checkbox')) return;
+            
+            dragStartX = e.clientX;
             dragStartY = e.clientY;
             dragTimer = setTimeout(() => {
                 this.startDragMode(element, task);
                 isDragging = true;
-            }, 500);
+                dragMode = true;
+                console.log('Drag mode activated for task:', task.title);
+            }, 800); // Longer delay to avoid conflict with swipe
         });
 
         element.addEventListener('touchstart', (e) => {
+            // Skip if touching checkboxes
+            if (e.target.closest('.completion-checkbox, .deletion-checkbox')) return;
+            
             const touch = e.touches[0];
+            dragStartX = touch.clientX;
             dragStartY = touch.clientY;
             dragTimer = setTimeout(() => {
                 this.startDragMode(element, task);
                 isDragging = true;
-            }, 500);
+                dragMode = true;
+                console.log('Drag mode activated for task:', task.title);
+            }, 800); // Longer delay for mobile
         });
 
         element.addEventListener('mouseup', () => {
@@ -624,6 +640,7 @@ class MyToDoApp {
             if (isDragging) {
                 this.endDragMode();
                 isDragging = false;
+                dragMode = false;
             }
         });
 
@@ -632,19 +649,30 @@ class MyToDoApp {
             if (isDragging) {
                 this.endDragMode();
                 isDragging = false;
+                dragMode = false;
             }
         });
 
         element.addEventListener('mousemove', (e) => {
-            if (Math.abs(e.clientY - dragStartY) > 10) {
-                clearTimeout(dragTimer);
+            if (!dragMode) {
+                const deltaX = Math.abs(e.clientX - dragStartX);
+                const deltaY = Math.abs(e.clientY - dragStartY);
+                // Cancel drag if moving too much before drag mode starts
+                if (deltaX > 15 || deltaY > 15) {
+                    clearTimeout(dragTimer);
+                }
             }
         });
 
         element.addEventListener('touchmove', (e) => {
-            const touch = e.touches[0];
-            if (Math.abs(touch.clientY - dragStartY) > 10) {
-                clearTimeout(dragTimer);
+            if (!dragMode) {
+                const touch = e.touches[0];
+                const deltaX = Math.abs(touch.clientX - dragStartX);
+                const deltaY = Math.abs(touch.clientY - dragStartY);
+                // Allow vertical movement for drag, but cancel on horizontal swipe
+                if (deltaX > 20) {
+                    clearTimeout(dragTimer);
+                }
             }
         });
     }
@@ -652,10 +680,13 @@ class MyToDoApp {
     startDragMode(element, task) {
         if (this.currentScreen !== 'main') return;
         
-        element.style.opacity = '0.7';
-        element.style.transform = 'scale(1.02)';
-        element.style.zIndex = '1000';
-        element.style.backgroundColor = '#374151';
+        // Only allow drag & drop when sorting by creation date
+        if (this.sortBy !== 'created') {
+            console.log('Drag & drop only available when sorting by creation date');
+            return;
+        }
+        
+        element.classList.add('drag-active');
         
         this.draggedElement = element;
         this.draggedTask = task;
@@ -735,10 +766,7 @@ class MyToDoApp {
 
     endDragMode() {
         if (this.draggedElement) {
-            this.draggedElement.style.opacity = '';
-            this.draggedElement.style.transform = '';
-            this.draggedElement.style.zIndex = '';
-            this.draggedElement.style.backgroundColor = '';
+            this.draggedElement.classList.remove('drag-active');
             this.draggedElement = null;
             this.draggedTask = null;
         }
