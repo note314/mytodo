@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>MyToDo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="./manifest.json">
@@ -43,25 +43,6 @@
             to { transform: translateX(0); }
         }
         
-        .drop-zone {
-            position: relative;
-        }
-        
-        .drop-zone::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background-color: #059669;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-        
-        .drop-zone:hover::before {
-            opacity: 1;
-        }
         
         /* Improve touch responsiveness for checkboxes */
         .completion-checkbox, .deletion-checkbox {
@@ -88,26 +69,35 @@
             text-decoration: none !important;
         }
         
-        /* Drag mode visual feedback */
-        .drag-active {
-            opacity: 0.7 !important;
-            transform: scale(1.02) !important;
-            z-index: 1000 !important;
-            background-color: #374151 !important;
-            border: 2px solid #059669 !important;
+        /* Modal positioning optimization for mobile keyboards */
+        .modal-top {
+            align-items: flex-start !important;
+            padding-top: max(4rem, env(safe-area-inset-top) + 2rem);
+            padding-bottom: env(safe-area-inset-bottom);
         }
         
-        /* Prevent scrolling during drag */
-        body.dragging {
-            overflow: hidden;
-            touch-action: none;
+        .modal-center {
+            align-items: center !important;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
         
-        /* Drop zone highlighting */
-        .drop-zone-highlight {
-            border-top: 3px solid #059669 !important;
-            background-color: #374151 !important;
+        /* Prevent modal content from being too close to screen edges */
+        .modal-content {
+            max-height: calc(100vh - 8rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            overflow-y: auto;
         }
+        
+        /* Additional mobile keyboard optimization */
+        @media (max-height: 600px) {
+            .modal-top {
+                padding-top: 2rem;
+            }
+            .modal-content {
+                max-height: calc(100vh - 4rem);
+            }
+        }
+        
     </style>
 </head>
 <body class="bg-gray-900 text-white overflow-x-hidden">
@@ -220,8 +210,8 @@
     </div>
 
     <!-- Task Registration Modal -->
-    <div id="taskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
-        <div class="bg-gray-800 rounded-lg p-6 m-4 w-full max-w-sm">
+    <div id="taskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center z-40 modal-top">
+        <div class="bg-gray-800 rounded-lg p-6 mx-4 w-full max-w-sm modal-content">
             <h2 class="text-lg font-medium text-white mb-4">New Task</h2>
             
             <div class="space-y-4">
@@ -244,8 +234,8 @@
     </div>
 
     <!-- Task Detail Modal -->
-    <div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
-        <div class="bg-gray-800 rounded-lg p-6 m-4 w-full max-w-sm">
+    <div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center z-40 modal-center">
+        <div class="bg-gray-800 rounded-lg p-6 mx-4 w-full max-w-sm modal-content">
             <h2 class="text-lg font-medium text-white mb-4">Task Details</h2>
             
             <div class="space-y-4">
@@ -278,8 +268,8 @@
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-gray-800 rounded-lg p-6 m-4 w-full max-w-sm">
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center z-50 modal-center">
+        <div class="bg-gray-800 rounded-lg p-6 mx-4 w-full max-w-sm modal-content">
             <h2 class="text-lg font-medium text-white mb-4" id="confirmTitle"></h2>
             <p class="text-gray-300 mb-6" id="confirmMessage"></p>
             

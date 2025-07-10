@@ -3,7 +3,6 @@ class MyToDoApp {
         this.tasks = [];
         this.currentEditingTask = null;
         this.currentScreen = 'main';
-        this.draggedElement = null;
         this.swipeStartX = 0;
         this.swipeStartY = 0;
         this.swipeElement = null;
@@ -353,9 +352,6 @@ class MyToDoApp {
 
         // Swipe functionality - bind only to title area to avoid checkbox interference
         this.bindSwipeEvents(titleElement, task, element);
-        
-        // Drag and drop functionality
-        this.bindDragEvents(element, task);
     }
 
     bindArchiveTaskEvents(element, task) {
@@ -393,9 +389,6 @@ class MyToDoApp {
         const element = parentElement || swipeTarget;
         
         swipeTarget.addEventListener('touchstart', (e) => {
-            // Don't start swipe if drag mode is active
-            if (this.draggedElement) return;
-            
             const touch = e.touches[0];
             startX = touch.clientX;
             startY = touch.clientY;
@@ -404,7 +397,7 @@ class MyToDoApp {
         });
 
         swipeTarget.addEventListener('touchmove', (e) => {
-            if (!this.swipeElement || this.draggedElement) return;
+            if (!this.swipeElement) return;
             
             const touch = e.touches[0];
             const deltaX = touch.clientX - startX;
@@ -425,7 +418,7 @@ class MyToDoApp {
         });
 
         swipeTarget.addEventListener('touchend', (e) => {
-            if (!this.swipeElement || this.draggedElement) return;
+            if (!this.swipeElement) return;
             
             const touch = e.changedTouches[0];
             const deltaX = touch.clientX - startX;
@@ -598,271 +591,6 @@ class MyToDoApp {
         }
     }
 
-    // Drag and Drop Implementation
-    bindDragEvents(element, task) {
-        let dragStartX = 0, dragStartY = 0;
-        let dragTimer = null;
-        let isDragging = false;
-        let dragMode = false;
-
-        // Long press to start drag mode - only for non-swipe areas
-        element.addEventListener('mousedown', (e) => {
-            // Skip if clicking on checkboxes
-            if (e.target.closest('.completion-checkbox, .deletion-checkbox')) return;
-            
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            dragTimer = setTimeout(() => {
-                this.startDragMode(element, task);
-                isDragging = true;
-                dragMode = true;
-                console.log('Drag mode activated for task:', task.title);
-            }, 800); // Longer delay to avoid conflict with swipe
-        });
-
-        element.addEventListener('touchstart', (e) => {
-            // Skip if touching checkboxes
-            if (e.target.closest('.completion-checkbox, .deletion-checkbox')) return;
-            
-            const touch = e.touches[0];
-            dragStartX = touch.clientX;
-            dragStartY = touch.clientY;
-            dragTimer = setTimeout(() => {
-                this.startDragMode(element, task);
-                isDragging = true;
-                dragMode = true;
-                console.log('Drag mode activated for task:', task.title);
-            }, 800); // Longer delay for mobile
-        });
-
-        element.addEventListener('mouseup', () => {
-            clearTimeout(dragTimer);
-            if (isDragging) {
-                this.endDragMode();
-                isDragging = false;
-                dragMode = false;
-            }
-        });
-
-        element.addEventListener('touchend', () => {
-            clearTimeout(dragTimer);
-            if (isDragging) {
-                this.endDragMode();
-                isDragging = false;
-                dragMode = false;
-            }
-        });
-
-        element.addEventListener('mousemove', (e) => {
-            if (!dragMode) {
-                const deltaX = Math.abs(e.clientX - dragStartX);
-                const deltaY = Math.abs(e.clientY - dragStartY);
-                // Cancel drag if moving too much before drag mode starts
-                if (deltaX > 15 || deltaY > 15) {
-                    clearTimeout(dragTimer);
-                }
-            }
-        });
-
-        element.addEventListener('touchmove', (e) => {
-            if (!dragMode) {
-                const touch = e.touches[0];
-                const deltaX = Math.abs(touch.clientX - dragStartX);
-                const deltaY = Math.abs(touch.clientY - dragStartY);
-                // Allow vertical movement for drag, but cancel on horizontal swipe
-                if (deltaX > 20) {
-                    clearTimeout(dragTimer);
-                }
-            } else {
-                // Prevent scrolling during drag
-                e.preventDefault();
-            }
-        }, { passive: false });
-    }
-
-    startDragMode(element, task) {
-        if (this.currentScreen !== 'main') return;
-        
-        // Only allow drag & drop when sorting by creation date
-        if (this.sortBy !== 'created') {
-            console.log('Drag & drop only available when sorting by creation date');
-            return;
-        }
-        
-        element.classList.add('drag-active');
-        document.body.classList.add('dragging');
-        
-        this.draggedElement = element;
-        this.draggedTask = task;
-        this.currentDropTarget = null;
-        
-        // Add drop zones to other tasks
-        const allTasks = document.querySelectorAll('.task-item');
-        allTasks.forEach((taskEl) => {
-            if (taskEl !== element) {
-                taskEl.classList.add('drop-zone');
-                this.bindDropEvents(taskEl);
-            }
-        });
-        
-        // Add touch move handler for drag feedback
-        this.addDragMoveHandler();
-    }
-
-    bindDropEvents(element) {
-        element.addEventListener('mouseenter', () => {
-            if (this.draggedElement) {
-                element.style.borderTop = '2px solid #059669';
-            }
-        });
-
-        element.addEventListener('mouseleave', () => {
-            element.style.borderTop = '';
-        });
-
-        element.addEventListener('mouseup', () => {
-            if (this.draggedElement) {
-                this.dropTask(element);
-            }
-        });
-
-        element.addEventListener('touchend', () => {
-            if (this.draggedElement) {
-                this.dropTask(element);
-            }
-        });
-    }
-
-    dropTask(targetElement) {
-        if (!this.draggedTask || !targetElement.dataset.taskId) return;
-        
-        const targetTaskId = targetElement.dataset.taskId;
-        const targetTask = this.tasks.find(t => t.id === targetTaskId);
-        
-        if (targetTask && this.draggedTask.id !== targetTask.id) {
-            // Reorder tasks
-            this.reorderTasks(this.draggedTask.id, targetTask.order);
-            this.saveTasksToStorage();
-            this.renderTasks();
-        }
-    }
-
-    reorderTasks(draggedTaskId, targetOrder) {
-        const draggedTask = this.tasks.find(t => t.id === draggedTaskId);
-        if (!draggedTask) return;
-
-        const originalOrder = draggedTask.order;
-        
-        if (originalOrder < targetOrder) {
-            // Moving down
-            this.tasks.forEach(task => {
-                if (task.order > originalOrder && task.order <= targetOrder) {
-                    task.order--;
-                }
-            });
-        } else {
-            // Moving up
-            this.tasks.forEach(task => {
-                if (task.order >= targetOrder && task.order < originalOrder) {
-                    task.order++;
-                }
-            });
-        }
-        
-        draggedTask.order = targetOrder;
-    }
-
-    addDragMoveHandler() {
-        // Remove any existing handlers
-        this.removeDragMoveHandler();
-        
-        // Touch move handler for mobile drag feedback
-        this.touchMoveHandler = (e) => {
-            if (!this.draggedElement) return;
-            
-            const touch = e.touches[0];
-            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-            const dropTarget = elementBelow ? elementBelow.closest('.task-item.drop-zone') : null;
-            
-            // Clear previous drop target highlighting
-            if (this.currentDropTarget && this.currentDropTarget !== dropTarget) {
-                this.currentDropTarget.style.borderTop = '';
-                this.currentDropTarget.style.backgroundColor = '';
-            }
-            
-            // Highlight current drop target
-            if (dropTarget && dropTarget !== this.currentDropTarget) {
-                dropTarget.style.borderTop = '3px solid #059669';
-                dropTarget.style.backgroundColor = '#374151';
-                console.log('Drag over task:', dropTarget.dataset.taskId);
-            }
-            
-            this.currentDropTarget = dropTarget;
-        };
-        
-        // Mouse move handler for desktop
-        this.mouseMoveHandler = (e) => {
-            if (!this.draggedElement) return;
-            
-            const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-            const dropTarget = elementBelow ? elementBelow.closest('.task-item.drop-zone') : null;
-            
-            // Clear previous drop target highlighting
-            if (this.currentDropTarget && this.currentDropTarget !== dropTarget) {
-                this.currentDropTarget.style.borderTop = '';
-                this.currentDropTarget.style.backgroundColor = '';
-            }
-            
-            // Highlight current drop target
-            if (dropTarget && dropTarget !== this.currentDropTarget) {
-                dropTarget.style.borderTop = '3px solid #059669';
-                dropTarget.style.backgroundColor = '#374151';
-            }
-            
-            this.currentDropTarget = dropTarget;
-        };
-        
-        document.addEventListener('touchmove', this.touchMoveHandler, { passive: false });
-        document.addEventListener('mousemove', this.mouseMoveHandler);
-    }
-    
-    removeDragMoveHandler() {
-        if (this.touchMoveHandler) {
-            document.removeEventListener('touchmove', this.touchMoveHandler);
-            this.touchMoveHandler = null;
-        }
-        if (this.mouseMoveHandler) {
-            document.removeEventListener('mousemove', this.mouseMoveHandler);
-            this.mouseMoveHandler = null;
-        }
-    }
-
-    endDragMode() {
-        if (this.draggedElement) {
-            this.draggedElement.classList.remove('drag-active');
-            document.body.classList.remove('dragging');
-            
-            // Drop on current target if exists
-            if (this.currentDropTarget) {
-                this.dropTask(this.currentDropTarget);
-            }
-            
-            this.draggedElement = null;
-            this.draggedTask = null;
-            this.currentDropTarget = null;
-        }
-        
-        // Remove drag move handlers
-        this.removeDragMoveHandler();
-        
-        // Remove drop zones
-        const dropZones = document.querySelectorAll('.drop-zone');
-        dropZones.forEach(zone => {
-            zone.classList.remove('drop-zone');
-            zone.style.borderTop = '';
-            zone.style.backgroundColor = '';
-        });
-    }
 
     // Utility Functions
     formatDate(date) {
