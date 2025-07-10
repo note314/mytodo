@@ -212,7 +212,7 @@ class MyToDoApp {
                 <div class="flex-1">
                     <span class="block text-sm ${
                         task.isCompleted 
-                            ? 'text-gray-400 line-through' 
+                            ? 'text-gray-400' 
                             : 'text-gray-200'
                     }">
                         ${this.escapeHtml(task.title)}
